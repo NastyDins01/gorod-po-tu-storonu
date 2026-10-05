@@ -1,1 +1,410 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Город по ту сторону</title>
+<style>
+html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#080a10;
+    color:white;
+    font-family:Arial,sans-serif;
+}
+*{
+    box-sizing:border-box;
+}
+body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+#screen{
+    width:100%;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    background:
+        radial-gradient(
+            circle at 50% 40%,
+            #4b1725 0%,
+            #17111b 28%,
+            #080a10 70%
+        );
+}
+.box{
+    width:min(700px,90%);
+}
+.small{
+    color:#a7a9b2;
+    font-size:12px;
+    letter-spacing:5px;
+    margin-bottom:25px;
+}
+h1{
+    margin:0;
+    font-size:clamp(40px,10vw,82px);
+    line-height:.9;
+    letter-spacing:5px;
+    text-shadow:
+        0 0 15px #9b263e,
+        0 0 45px rgba(155,38,62,.5);
+}
+p{
+    max-width:560px;
+    margin:30px auto;
+    color:#c8cad0;
+    font-size:15px;
+    line-height:1.7;
+}
+button{
+    padding:15px 38px;
+    border:1px solid #b64a60;
+    border-radius:10px;
+    background:#711d31;
+    color:white;
+    font-size:14px;
+    font-weight:bold;
+    letter-spacing:2px;
+}
+button:active{
+    transform:scale(.97);
+}
+#game{
+    display:none;
+    width:100%;
+    height:100%;
+    position:relative;
+}
+#game canvas{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+}
+#title{
+    position:absolute;
+    top:20px;
+    left:20px;
+    z-index:5;
+    padding:12px 16px;
+    border-radius:12px;
+    background:rgba(0,0,0,.6);
+    border:1px solid rgba(255,255,255,.15);
+}
+#message{
+    position:absolute;
+    left:50%;
+    bottom:30px;
+    transform:translateX(-50%);
+    z-index:5;
+    width:min(600px,90%);
+    padding:14px;
+    border-radius:12px;
+    background:rgba(0,0,0,.75);
+    text-align:center;
+}
+</style>
+</head>
+<body>
+<div id="screen">
+    <div class="box">
+        <div class="small">
+            НЕИЗВЕСТНОЕ МЕСТО · 03:17
+        </div>
+        <h1>
+            ГОРОД
 
+            ПО ТУ СТОРОНУ
+        </h1>
+        <p>
+            Ты просыпаешься посреди незнакомого города.
+            Телефон не ловит сеть.
+            Вокруг почти никого нет.
+            Тебе нужно понять, где ты находишься,
+            и найти дорогу домой.
+        </p>
+        <button id="start">
+            НАЧАТЬ ИГРУ
+        </button>
+    </div>
+</div>
+<div id="game">
+    <canvas id="canvas"></canvas>
+    <div id="title">
+        ГОРОД ПО ТУ СТОРОНУ
+    </div>
+    <div id="message">
+        Используй WASD или стрелки для движения.
+    </div>
+</div>
+<script>
+const screen = document.getElementById("screen");
+const game = document.getElementById("game");
+const button = document.getElementById("start");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+let width = 0;
+let height = 0;
+function resize(){
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width * window.devicePixelRatio;
+    canvas.height = height * window.devicePixelRatio;
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+    ctx.setTransform(
+        window.devicePixelRatio,
+        0,
+        0,
+        window.devicePixelRatio,
+        0,
+        0
+    );
+}
+window.addEventListener("resize", resize);
+resize();
+let player = {
+    x: width / 2,
+    y: height / 2,
+    speed: 3
+};
+let keys = {};
+window.addEventListener("keydown", function(event){
+    keys[event.key.toLowerCase()] = true;
+});
+window.addEventListener("keyup", function(event){
+    keys[event.key.toLowerCase()] = false;
+});
+button.addEventListener("click", function(){
+    screen.style.display = "none";
+    game.style.display = "block";
+    player.x = width / 2;
+    player.y = height / 2;
+    resize();
+});
+function draw(){
+    ctx.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+    /* НОЧНОЕ НЕБО */
+    const sky =
+        ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            height
+        );
+    sky.addColorStop(
+        0,
+        "#111525"
+    );
+    sky.addColorStop(
+        0.5,
+        "#151b25"
+    );
+    sky.addColorStop(
+        1,
+        "#070a0f"
+    );
+    ctx.fillStyle = sky;
+    ctx.fillRect(
+        0,
+        0,
+        width,
+        height
+    );
+    /* ДОРОГА */
+    ctx.fillStyle = "#292d35";
+    ctx.fillRect(
+        0,
+        height * .35,
+        width,
+        height * .3
+    );
+    /* РАЗМЕТКА */
+    ctx.strokeStyle = "#777b83";
+    ctx.lineWidth = 3;
+    ctx.setLineDash([40,35]);
+    ctx.beginPath();
+    ctx.moveTo(
+        0,
+        height / 2
+    );
+    ctx.lineTo(
+        width,
+        height / 2
+    );
+    ctx.stroke();
+    ctx.setLineDash([]);
+    /* ДОМА */
+    for(
+        let x = -100;
+        x < width + 100;
+        x += 170
+    ){
+        let buildingHeight =
+            120 + (x * 7) % 130;
+        ctx.fillStyle = "#171b24";
+        ctx.fillRect(
+            x,
+            height * .35 - buildingHeight,
+            135,
+            buildingHeight
+        );
+        for(
+            let wx = x + 20;
+            wx < x + 115;
+            wx += 35
+        ){
+            ctx.fillStyle =
+                Math.random() > .65
+                ? "#c28b55"
+                : "#303744";
+            ctx.fillRect(
+                wx,
+                height * .35 - buildingHeight + 25,
+                15,
+                22
+            );
+        }
+    }
+    /* ФОНАРИ */
+    for(
+        let x = 70;
+        x < width;
+        x += 150
+    ){
+        ctx.strokeStyle = "#151820";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(
+            x,
+            height * .55
+        );
+        ctx.lineTo(
+            x,
+            height * .27
+        );
+        ctx.stroke();
+        const glow =
+            ctx.createRadialGradient(
+                x,
+                height * .27,
+                2,
+                x,
+                height * .27,
+                70
+            );
+        glow.addColorStop(
+            0,
+            "rgba(255,180,90,.35)"
+        );
+        glow.addColorStop(
+            1,
+            "rgba(255,180,90,0)"
+        );
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(
+            x,
+            height * .27,
+            70,
+            0,
+            Math.PI * 2
+        );
+        ctx.fill();
+    }
+    /* ИГРОК */
+    ctx.fillStyle = "#15171d";
+    ctx.beginPath();
+    ctx.arc(
+        player.x,
+        player.y,
+        17,
+        0,
+        Math.PI * 2
+    );
+    ctx.fill();
+    ctx.fillStyle = "#dcae8b";
+    ctx.beginPath();
+    ctx.arc(
+        player.x,
+        player.y - 20,
+        10,
+        0,
+        Math.PI * 2
+    );
+    ctx.fill();
+    /* ДОЖДЬ */
+    ctx.strokeStyle =
+        "rgba(190,205,225,.2)";
+    for(
+        let i = 0;
+        i < 100;
+        i++
+    ){
+        const x =
+            (i * 97) % width;
+        const y =
+            (Date.now() / 8 + i * 70) % height;
+        ctx.beginPath();
+        ctx.moveTo(
+            x,
+            y
+        );
+        ctx.lineTo(
+            x - 3,
+            y + 14
+        );
+        ctx.stroke();
+    }
+}
+function update(){
+    if(keys["w"] || keys["arrowup"]){
+        player.y -= player.speed;
+    }
+    if(keys["s"] || keys["arrowdown"]){
+        player.y += player.speed;
+    }
+    if(keys["a"] || keys["arrowleft"]){
+        player.x -= player.speed;
+    }
+    if(keys["d"] || keys["arrowright"]){
+        player.x += player.speed;
+    }
+    player.x =
+        Math.max(
+            20,
+            Math.min(
+                width - 20,
+                player.x
+            )
+        );
+    player.y =
+        Math.max(
+            20,
+            Math.min(
+                height - 20,
+                player.y
+            )
+        );
+}
+function loop(){
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
